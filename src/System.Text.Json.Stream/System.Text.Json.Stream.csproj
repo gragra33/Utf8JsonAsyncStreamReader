@@ -4,7 +4,24 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId>Utf8JsonAsyncStreamReader</PackageId>
+    <Title>An Asynchronous forward-only streaming JSON parser and deserializer based on System.Text.Json.Utf8JsonReader.</Title>
+    <Description>An Asynchronous forward-only streaming JSON parser and deserializer based on System.Text.Json.Utf8JsonReader. Buffer reads a stream and enable conditional branch deserialization. Memory usage is minimal, based of either the buffer size used or the json property branch being deserialized.</Description>
+    <Copyright>MIT License</Copyright>
+    <PackageProjectUrl>https://github.com/gragra33/Utf8JsonAsyncStreamReader</PackageProjectUrl>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/gragra33/Utf8JsonAsyncStreamReader</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Json, stream, streaming</PackageTags>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\readme.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
