@@ -5,7 +5,13 @@ VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Text.Json.Stream", "System.Text.Json.Stream\System.Text.Json.Stream.csproj", "{97B87640-E80C-4511-A7E3-7C7BE64BCA9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Text.Json.Stream.Tests", "System.Text.Json.Stream.Tests\System.Text.Json.Stream.Tests.csproj", "{C5F1D429-6956-48AC-B56E-674A5C0CD92D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Text.Json.Stream.Tests", "System.Text.Json.Stream.Tests\System.Text.Json.Stream.Tests.csproj", "{C5F1D429-6956-48AC-B56E-674A5C0CD92D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8828A2CE-A226-436F-BC9B-3900EFE6A845}"
+	ProjectSection(SolutionItems) = preProject
+		..\LICENSE = ..\LICENSE
+		..\readme.md = ..\readme.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
