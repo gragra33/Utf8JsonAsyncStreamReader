@@ -10,7 +10,7 @@ namespace UnitTests.Tests.Readers.System.Text.Json;
 public class Utf8JsonAsyncStreamReader
 {
     private static readonly DateTime testDateTime = new(2022, 09, 01, 11, 12, 13);
-    private static readonly DateTimeOffset testDateTimeOffset = testDateTime.ToDateTimeOffset(new TimeSpan(0,30,0));
+    private static readonly DateTimeOffset testDateTimeOffset = testDateTime.ToDateTimeOffset(new TimeSpan(0, 30, 0));
     private static readonly Guid testGuid = Guid.NewGuid();
 
     private readonly string jsonProperties = JsonSerializer.Serialize
@@ -21,8 +21,8 @@ public class Utf8JsonAsyncStreamReader
             IntNegative = int.MinValue,
             LongPositive = long.MaxValue,
             LongNegative = long.MinValue,
-            ShortPositive = short.MaxValue,   
-            ShortNegative = short.MinValue,   
+            ShortPositive = short.MaxValue,
+            ShortNegative = short.MinValue,
             FloatPositive = float.MaxValue,
             FloatNegative = float.MinValue,
             DoublePositive = double.MaxValue,
@@ -33,6 +33,28 @@ public class Utf8JsonAsyncStreamReader
             DateTimeOffsetValue = testDateTimeOffset,
             GuidValue = testGuid
         }
+    );
+
+    private readonly string jsonPropertiesCamelCase = JsonSerializer.Serialize
+    (
+        new
+        {
+            IntPositive = int.MaxValue,
+            IntNegative = int.MinValue,
+            LongPositive = long.MaxValue,
+            LongNegative = long.MinValue,
+            ShortPositive = short.MaxValue,
+            ShortNegative = short.MinValue,
+            FloatPositive = float.MaxValue,
+            FloatNegative = float.MinValue,
+            DoublePositive = double.MaxValue,
+            DoubleNegative = double.MinValue,
+            BoolValue = true,
+            StringValue = "this is a string",
+            DateTimeValue = testDateTime,
+            DateTimeOffsetValue = testDateTimeOffset,
+            GuidValue = testGuid
+        }, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
     );
 
     private readonly string jsonCollection = JsonSerializer.Serialize
@@ -244,6 +266,32 @@ public class Utf8JsonAsyncStreamReader
         JsonReader reader = new(stream); // System.Text.Json.Utf8JsonAsyncStreamReader
 
         JsonPropertyObject? result = await reader.DeserializeAsync<JsonPropertyObject>();
+
+        result!.IntPositive.Should().Be(int.MaxValue);
+        result.IntNegative.Should().Be(int.MinValue);
+        result.LongPositive.Should().Be(long.MaxValue);
+        result.LongNegative.Should().Be(long.MinValue);
+        result.ShortPositive.Should().Be(short.MaxValue);
+        result.ShortNegative.Should().Be(short.MinValue);
+        result.FloatPositive.Should().BeApproximately(float.MaxValue, 0.01F);
+        result.FloatNegative.Should().BeApproximately(float.MinValue, 0.01F);
+        result.DoublePositive.Should().BeApproximately(double.MaxValue, 0.01F);
+        result.DoubleNegative.Should().BeApproximately(double.MinValue, 0.01F);
+        result.BoolValue.Should().Be(true);
+        result.StringValue.Should().Be("this is a string");
+        result.DateTimeValue.Should().Be(new DateTime(2022, 09, 01, 11, 12, 13));
+    }
+
+    [Fact]
+    async Task Deserialize_Property_CamelCase()
+    {
+        MemoryStream stream = new(Encoding.UTF8.GetBytes(this.jsonPropertiesCamelCase));
+        JsonReader reader = new(stream); // System.Text.Json.Utf8JsonAsyncStreamReader
+
+        JsonPropertyObject? result = await reader.DeserializeAsync<JsonPropertyObject>(new JsonSerializerOptions()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
 
         result!.IntPositive.Should().Be(int.MaxValue);
         result.IntNegative.Should().Be(int.MinValue);
