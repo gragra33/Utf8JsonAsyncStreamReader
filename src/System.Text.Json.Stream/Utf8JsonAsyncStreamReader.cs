@@ -154,7 +154,7 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
 
         // deserialize object from temp stream
         TValue? result = await JsonSerializer
-            .DeserializeAsync<TValue>(stream, cancellationToken: cancellationToken)
+            .DeserializeAsync<TValue>(stream, options, cancellationToken)
             .ConfigureAwait(false);
 
         // we are done buffering
