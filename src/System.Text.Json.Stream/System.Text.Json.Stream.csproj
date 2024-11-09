@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFrameworks>net8.0;net7.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Utf8JsonAsyncStreamReader</PackageId>
@@ -14,10 +14,21 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>Json, stream, streaming</PackageTags>
     <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.4.0</Version>
   </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
-	</ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <PackageReference Include="System.IO.Pipelines">
+      <Version>8.*</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+    <PackageReference Include="System.IO.Pipelines">
+      <Version>7.*</Version>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>

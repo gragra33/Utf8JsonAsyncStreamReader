@@ -11,3 +11,8 @@ Package: [Utf8JsonAsyncStreamReader](https://www.nuget.org/packages/Utf8JsonAsyn
 ## Support
 
 If you find this library useful, then please consider [buying me a coffee ☕](https://bmc.link/gragra33).
+
+## History
+
+- 1.0.0: Initial release - supports .Net 7.0
+- 1.1.0: Updated to support .Net 8.0; fixed missing paramater JsonSerializerOptions in one call
