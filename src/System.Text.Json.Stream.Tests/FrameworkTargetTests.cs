@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Stream;
-using FluentAssertions;
 using JsonReader = System.Text.Json.Stream.Utf8JsonAsyncStreamReader;
 
 namespace UnitTests.Tests.Readers.System.Text.Json;

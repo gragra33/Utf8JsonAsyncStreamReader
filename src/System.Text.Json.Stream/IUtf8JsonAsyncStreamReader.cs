@@ -31,26 +31,26 @@ public interface IUtf8JsonAsyncStreamReader : IDisposable
     /// <returns>A <see cref="T:System.Threading.Tasks.ValueTask`1" /> representing the asynchronous read operation state. <see langword="false" /> if finished, <see langword="true" /> if there is more to read.</returns>
     ValueTask<bool> ReadAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Reads the UTF-8 encoded text representing a single JSON value into a <typeparamref name="TValue"/>.
-    /// The Stream will be read to end of current branch.
-    /// </summary>
-    /// <typeparam name="TValue">The type to deserialize the JSON value into.</typeparam>
-    /// <returns>A <typeparamref name="TValue"/> representation of the JSON value.</returns>
-    /// <param name="options">Options to control the behavior during reading.</param>
-    /// <param name="cancellationToken">
-    /// The <see cref="System.Threading.CancellationToken"/> that can be used to cancel the read operation.
-    /// </param>
-    /// <exception cref="System.ArgumentNullException"></exception>
-    /// <exception cref="JsonException">
-    /// The JSON is invalid,
-    /// <typeparamref name="TValue"/> is not compatible with the JSON,
-    /// or when there is remaining data in the Stream.
-    /// </exception>
-    /// <exception cref="NotSupportedException">
-    /// There is no compatible <see cref="System.Text.Json.Serialization.JsonConverter"/>
-    /// for <typeparamref name="TValue"/> or its serializable members.
-    /// </exception>
+        /// <summary>
+        /// Reads the UTF-8 encoded text representing a single JSON value into a <typeparamref name="TResult"/>.
+        /// The Stream will be read to end of current branch.
+        /// </summary>
+        /// <typeparam name="TResult">The type to deserialize the JSON value into.</typeparam>
+        /// <returns>A <typeparamref name="TResult"/> representation of the JSON value.</returns>
+        /// <param name="options">Options to control the behavior during reading.</param>
+        /// <param name="cancellationToken">
+        /// The <see cref="System.Threading.CancellationToken"/> that can be used to cancel the read operation.
+        /// </param>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        /// <exception cref="JsonException">
+        /// The JSON is invalid,
+    /// <typeparamref name="TResult"/> is not compatible with the JSON,
+        /// or when there is remaining data in the Stream.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// There is no compatible <see cref="System.Text.Json.Serialization.JsonConverter"/>
+    /// for <typeparamref name="TResult"/> or its serializable members.
+        /// </exception>
     ValueTask<TResult?> DeserializeAsync<TResult>(JsonSerializerOptions? options = null, CancellationToken cancellationToken = default);
 
     #endregion

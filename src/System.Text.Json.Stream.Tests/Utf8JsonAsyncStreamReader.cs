@@ -100,7 +100,7 @@ public class Utf8JsonAsyncStreamReader
     [Fact]
     async Task Json_Property()
     {
-        MemoryStream stream = new(Encoding.UTF8.GetBytes(this.jsonProperties));
+        MemoryStream stream = new(Encoding.UTF8.GetBytes(jsonProperties));
         JsonReader reader = new(stream); // System.Text.Json.Utf8JsonAsyncStreamReader
 
         await reader.ReadAsync();
@@ -243,7 +243,7 @@ public class Utf8JsonAsyncStreamReader
     [Fact]
     async Task Json_Collection()
     {
-        MemoryStream stream = new(Encoding.UTF8.GetBytes(this.jsonCollection));
+        MemoryStream stream = new(Encoding.UTF8.GetBytes(jsonCollection));
         JsonReader reader = new(stream); // System.Text.Json.Utf8JsonAsyncStreamReader
 
         await reader.ReadAsync();
@@ -294,7 +294,7 @@ public class Utf8JsonAsyncStreamReader
     [Fact]
     async Task Deserialize_Property()
     {
-        MemoryStream stream = new(Encoding.UTF8.GetBytes(this.jsonProperties));
+        MemoryStream stream = new(Encoding.UTF8.GetBytes(jsonProperties));
         JsonReader reader = new(stream); // System.Text.Json.Utf8JsonAsyncStreamReader
 
         JsonPropertyObject? result = await reader.DeserializeAsync<JsonPropertyObject>();
@@ -320,7 +320,7 @@ public class Utf8JsonAsyncStreamReader
     [Fact]
     async Task Deserialize_Property_CamelCase()
     {
-        MemoryStream stream = new(Encoding.UTF8.GetBytes(this.jsonPropertiesCamelCase));
+        MemoryStream stream = new(Encoding.UTF8.GetBytes(jsonPropertiesCamelCase));
         JsonReader reader = new(stream); // System.Text.Json.Utf8JsonAsyncStreamReader
 
         JsonPropertyObject? result = await reader.DeserializeAsync<JsonPropertyObject>(new JsonSerializerOptions()
@@ -349,7 +349,7 @@ public class Utf8JsonAsyncStreamReader
     [Fact]
     async Task Deserialize_Collection()
     {
-        MemoryStream stream = new(Encoding.UTF8.GetBytes(this.jsonCollection));
+        MemoryStream stream = new(Encoding.UTF8.GetBytes(jsonCollection));
         JsonReader reader = new(stream); // System.Text.Json.Utf8JsonAsyncStreamReader
 
         JsonCollectionObject? result = await reader.DeserializeAsync<JsonCollectionObject>();
