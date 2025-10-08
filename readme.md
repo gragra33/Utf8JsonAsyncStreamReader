@@ -138,7 +138,7 @@ If you find this library useful, please consider [buying me a coffee ☕](https:
 
 ## History
 
-### V1.2.0 - December 2024
+### V1.2.0 - October 2025
 
 - Added .NET 9.0 support
 - Added symbols support to NuGet package  
