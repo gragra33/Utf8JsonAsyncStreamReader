@@ -1,6 +1,7 @@
-﻿using System.Buffers;
+using System.Buffers;
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
+using Microsoft.IO;
 
 namespace System.Text.Json.Stream;
 
@@ -62,11 +63,28 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     private PipeWriter? _writer;
 
     /// <summary>
-    /// The raw bytes of the current JSON value.
+    /// The raw bytes of the current JSON value (lazy-allocated).
     /// </summary>
     internal byte[]? RawValueBytes;
 
-    #endregion
+    /// <summary>
+    /// Length of the value in bytes (internal so helpers can access it).
+    /// </summary>
+    internal int _valueLength;
+
+        
+    /// <summary>
+    /// Reusable options for creating <see cref="PipeWriter"/> instances that leave the underlying stream open.
+    /// </summary>
+    private static readonly StreamPipeWriterOptions _writerOptions = new(leaveOpen: true);
+
+    /// <summary>
+    /// RecyclableMemoryStreamManager for pooling MemoryStream instances.
+    /// Reduces Gen2 GC pressure by reusing streams instead of allocating new ones.
+    /// </summary>
+    private static readonly RecyclableMemoryStreamManager _memoryStreamManager = new();
+
+        #endregion
 
     #region Properties
 
@@ -84,7 +102,7 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
    /// <summary>
    /// The last processed value in the UTF-8 encoded JSON text.
    /// </summary>
-    public object? Value => this.GetValue(); //{ get; private set; }
+    public object? Value => this.GetValue();
 
     #endregion
 
@@ -98,8 +116,8 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     /// <param name="leaveOpen"><see langword="true" /> to leave the underlying stream open after the <see cref="Utf8JsonAsyncStreamReader" /> completes; <see langword="false" /> to close it. The default is <see langword="false" />.</param>
     public Utf8JsonAsyncStreamReader(IO.Stream stream, int minimumBufferSize = -1, bool leaveOpen = false)
     {
-        this._minimumBufferSize = minimumBufferSize == -1 ? 1024 * 8 : minimumBufferSize;
-        this._reader = PipeReader.Create(stream, new StreamPipeReaderOptions(null, this._minimumBufferSize, this._minimumBufferSize, leaveOpen));
+        _minimumBufferSize = minimumBufferSize == -1 ? 1024 * 8 : minimumBufferSize;
+        _reader = PipeReader.Create(stream, new StreamPipeReaderOptions(null, _minimumBufferSize, _minimumBufferSize, leaveOpen));
     }
 
     #endregion
@@ -113,47 +131,47 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     public async ValueTask<bool> ReadAsync(CancellationToken cancellationToken = default)
     {
         // check if finished
-        if (this._isFinished)
+        if (_isFinished)
         {
-            this.TokenType = JsonTokenType.None;
+            TokenType = JsonTokenType.None;
             return false;
         }
 
         // we need to read more from the stream
-        if (this.TokenType == JsonTokenType.None || !this.JsonReader(this._endOfStream))
+        if (TokenType == JsonTokenType.None || !JsonReader(_endOfStream))
         {
             // store stream buffer/chunk if we are wanting to Deserialize the Json object
-            if (this._isBuffering)
+            if (_isBuffering)
             {
-                this.WriteToBufferStream();
+                WriteToBufferStream();
 
                 // reset the buffer start tracking
-                this._bufferingStartIndex = 0;
+                _bufferingStartIndex = 0;
             }
 
             // move the start of the buffer past what has already been consumed
-            if (this._bytesConsumed > 0) this._reader.AdvanceTo(this._buffer.GetPosition(this._bytesConsumed));
+            if (_bytesConsumed > 0) _reader.AdvanceTo(_buffer.GetPosition(_bytesConsumed));
 
             // top up the buffer stream
-            ReadResult readResult = await this._reader
-                .ReadAtLeastAsync(this._minimumBufferSize, cancellationToken)
+            ReadResult readResult = await _reader
+                .ReadAtLeastAsync(_minimumBufferSize, cancellationToken)
                 .ConfigureAwait(false);
 
             // reset to new stream buffer segment
-            this._bytesConsumed = 0;
-            this._buffer = readResult.Buffer;
-            this._endOfStream = readResult.IsCompleted;
+            _bytesConsumed = 0;
+            _buffer = readResult.Buffer;
+            _endOfStream = readResult.IsCompleted;
 
             // check for any issues
-            if (this._buffer.Length - this._bytesConsumed > 0 && !this.JsonReader(this._endOfStream))
+            if (_buffer.Length - _bytesConsumed > 0 && !JsonReader(_endOfStream))
                 throw new Exception("Invalid Json or incomplete token or buffer undersized");
         }
 
         // we have reached the end of the stream
-        if (this._endOfStream && this._bytesConsumed == this._buffer.Length) this._isFinished = true;
+        if (_endOfStream && _bytesConsumed == _buffer.Length) _isFinished = true;
 
         // inform stream buffer read state
-        return !this._isFinished;
+        return !_isFinished;
     }
 
     /// <summary>
@@ -180,24 +198,22 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     public async ValueTask<TValue?> DeserializeAsync<TValue>(JsonSerializerOptions? options = null, CancellationToken cancellationToken = default)
     {
         // move to start of object or array
-        while (this.TokenType != JsonTokenType.StartObject && this.TokenType != JsonTokenType.StartArray && !cancellationToken.IsCancellationRequested)
-            await this.ReadAsync(cancellationToken).ConfigureAwait(false);
+        while (TokenType != JsonTokenType.StartObject && TokenType != JsonTokenType.StartArray && !cancellationToken.IsCancellationRequested)
+            await ReadAsync(cancellationToken).ConfigureAwait(false);
 
-        // Temp storage for joined chunk data. Note: length required is unknown
-        using MemoryStream stream = new MemoryStream();
-        this._writer = PipeWriter.Create(stream, new(leaveOpen: true));
+        // RecyclableMemoryStream instead of MemoryStream
+        // This pools and reuses stream instances, reducing Gen2 GC pressure
+        using MemoryStream stream = _memoryStreamManager.GetStream();
+        _writer = PipeWriter.Create(stream, _writerOptions);
 
         // fill temp stream with json object
-        if (!await this.GetJsonObjectAsync(stream, cancellationToken).ConfigureAwait(false))
+        if (!await GetJsonObjectAsync(stream, cancellationToken).ConfigureAwait(false))
             return default;
 
         // deserialize object from temp stream
         TValue? result = await JsonSerializer
             .DeserializeAsync<TValue>(stream, options, cancellationToken)
             .ConfigureAwait(false);
-
-        // we are done buffering
-        this._isBuffering = false;
 
         // temp stream is released and object returned
         return result;
@@ -208,7 +224,8 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     /// </summary>
     void IDisposable.Dispose()
     {
-        this.Dispose(true);
+        Dispose(true);
+        // ReSharper disable once GCSuppressFinalizeForTypeWithoutDestructor
         GC.SuppressFinalize(this);
     }
 
@@ -221,7 +238,7 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
         if (!disposing)
             return;
         
-        this._reader.Complete();
+        _reader.Complete();
     }
 
     #region Internal Methods
@@ -235,29 +252,31 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     private bool JsonReader(bool isFinalBlock)
     {
         // reference the current position in the buffer
-        ReadOnlySequence<byte> bytes = this._buffer.Slice(this._bytesConsumed);
+        ReadOnlySequence<byte> bytes = _buffer.Slice(_bytesConsumed);
 
         // read the next json token
-        Utf8JsonReader reader = new Utf8JsonReader(bytes, isFinalBlock, this._jsonReaderState);
+        Utf8JsonReader reader = new(bytes, isFinalBlock, _jsonReaderState);
 
         bool result = reader.Read();
 
-        this._bytesConsumed += (int)reader.BytesConsumed;   // within buffer window
-        this.BytesConsumed += this._bytesConsumed;          // within stream
+        int bytesConsumedByReader = (int)reader.BytesConsumed;
+        _bytesConsumed += bytesConsumedByReader;   // within buffer window
+        BytesConsumed += bytesConsumedByReader;    // within stream
 
-        this._jsonReaderState = reader.CurrentState;
+        _jsonReaderState = reader.CurrentState;
 
         // nothing to read
         if (!result)
             return false;
 
         // store token
-        this.TokenType = reader.TokenType;
+        TokenType = reader.TokenType;
 
-        // store raw value
+        // Copy value bytes immediately (no lazy materialization)
         ReadOnlySpan<byte> span = reader.HasValueSequence ? reader.ValueSequence.ToArray() : reader.ValueSpan;
-        this.RawValueBytes = new byte[span.Length];
-        span.CopyTo(this.RawValueBytes);
+        RawValueBytes = new byte[span.Length];
+        span.CopyTo(RawValueBytes);
+        _valueLength = span.Length;
 
         // success
         return true;
@@ -276,28 +295,30 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
         int depth = 0;
 
         // we are buffering all reads on the buffer stream
-        this._isBuffering = true;
-        this._bufferingStartIndex = this._bytesConsumed - 1;
+        _isBuffering = true;
+        _bufferingStartIndex = _bytesConsumed - 1;
 
         // walk the json object tree until we have the complete json object
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (this.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
+            if (TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
                 depth++;
-            else if (this.TokenType is JsonTokenType.EndObject or JsonTokenType.EndArray)
+            else if (TokenType is JsonTokenType.EndObject or JsonTokenType.EndArray)
                 depth--;
 
             if (depth == 0)
                 break;
 
-            await this.ReadAsync(cancellationToken).ConfigureAwait(false);
+            await ReadAsync(cancellationToken).ConfigureAwait(false);
         }
 
         // overflow
-        this.WriteToBufferStream();
+        WriteToBufferStream();
 
         // flush all writes
-        await this._writer!.CompleteAsync().ConfigureAwait(false);
+        await _writer!.CompleteAsync().ConfigureAwait(false);
+        
+        _isBuffering = false;
 
         // operation cancelled remotely
         if (cancellationToken.IsCancellationRequested)
@@ -316,17 +337,13 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WriteToBufferStream()
     {
-        // Note: unable to find a better optimization for pushing ReadOnlySequence into a Stream
-        int bytes = this._bytesConsumed - this._bufferingStartIndex;
-
-        // store
-        this._buffer.Slice(this._bufferingStartIndex, bytes).CopyTo(this._writer!.GetSpan(bytes));
-
-        // manually advance buffer pointer
-        this._writer.Advance(bytes);
-
-        // slower
-        //this._writer!.Write(this._buffer.Slice(this._bufferingStartIndex, this._bytesConsumed - this._bufferingStartIndex).ToArray());
+        int bytes = _bytesConsumed - _bufferingStartIndex;
+        
+        if (bytes <= 0) return;
+        
+        ReadOnlySequence<byte> slice = _buffer.Slice(_bufferingStartIndex, bytes);
+        slice.CopyTo(_writer!.GetSpan(bytes));
+        _writer.Advance(bytes);
     }
 
     #endregion
