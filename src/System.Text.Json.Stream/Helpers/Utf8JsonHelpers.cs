@@ -2,6 +2,9 @@
 
 namespace System.Text.Json.Stream;
 
+/// <summary>
+/// Provides extension methods for <see cref="Utf8JsonAsyncStreamReader"/> to extract strongly-typed values from JSON tokens.
+/// </summary>
 public static class Utf8JsonHelpers
 {
     /// <summary>
@@ -47,7 +50,7 @@ public static class Utf8JsonHelpers
     /// Get the boolean value from the reader.
     /// </summary>
     /// <param name="reader"><see cref="Utf8JsonAsyncStreamReader"/> instance.</param>
-    /// <returns>value of <see cref="JsonTokenType"/></returns>
+    /// <returns>Boolean value of <see cref="JsonTokenType"/>, or <see langword="null"/> if the token is not a boolean.</returns>
     public static bool? GetBoolean(this Utf8JsonAsyncStreamReader reader)
         => reader.TokenType == JsonTokenType.True ? true : reader.TokenType == JsonTokenType.False ? false : null;
 
@@ -279,7 +282,7 @@ public static class Utf8JsonHelpers
     /// Get the single-precision floating-point number from the reader.
     /// </summary>
     /// <param name="reader"><see cref="Utf8JsonAsyncStreamReader"/> instance.</param>
-    /// <returns>single-precision floating-point number</returns>
+    /// <returns>Single-precision floating-point number value of <see cref="JsonTokenType"/></returns>
     public static float GetSingle(this Utf8JsonAsyncStreamReader reader)
         => reader.TryGetSingle(out float? value) ? value ?? default : default;
 
@@ -303,15 +306,15 @@ public static class Utf8JsonHelpers
     }
 
     /// <summary>
-    /// Get the A double-precision floating-point number from the reader.
+    /// Get the double-precision floating-point number from the reader.
     /// </summary>
     /// <param name="reader"><see cref="Utf8JsonAsyncStreamReader"/> instance.</param>
-    /// <returns>A double-precision floating-point number</returns>
+    /// <returns>Double-precision floating-point number value of <see cref="JsonTokenType"/></returns>
     public static double GetDouble(this Utf8JsonAsyncStreamReader reader)
         => reader.TryGetDouble(out double? value) ? value ?? default : default;
 
     /// <summary>
-    /// Try getting the A double-precision floating-point number from the reader.
+    /// Try getting the double-precision floating-point number from the reader.
     /// </summary>
     /// <param name="reader"><see cref="Utf8JsonAsyncStreamReader"/> instance.</param>
     /// <param name="value">When the method returns, contains the value parsed from the reader, if the parsing operation succeeded.</param>
@@ -386,7 +389,7 @@ public static class Utf8JsonHelpers
     /// Get the <see cref="T:System.DateTimeOffset" /> value from the reader.
     /// </summary>
     /// <param name="reader"><see cref="Utf8JsonAsyncStreamReader"/> instance.</param>
-    /// <returns>A <see cref="T:System.DateTimeOffset" /> object whose date and time is the current local time and whose offset is the local time zone's offset from Coordinated Universal Time (UTC).</returns>
+    /// <returns>A <see cref="T:System.DateTimeOffset" /> value parsed from the JSON token.</returns>
     public static DateTimeOffset GetDateTimeOffset(this Utf8JsonAsyncStreamReader reader)
         => reader.TryGetDateTimeOffset(out DateTimeOffset? value) ? value ?? default : default;
 

@@ -11,20 +11,59 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
 {
     #region fields
 
+    /// <summary>
+    /// The minimum buffer size to use when reading from the stream.
+    /// </summary>
     private readonly int _minimumBufferSize;
+    
+    /// <summary>
+    /// The pipe reader used to read from the underlying stream.
+    /// </summary>
     private readonly PipeReader _reader;
 
+    /// <summary>
+    /// The number of bytes consumed from the current buffer.
+    /// </summary>
     private int _bytesConsumed;
+    
+    /// <summary>
+    /// Indicates whether the reader has finished reading the stream.
+    /// </summary>
     private bool _isFinished;
+    
+    /// <summary>
+    /// Indicates whether the end of the stream has been reached.
+    /// </summary>
     private bool _endOfStream;
+    
+    /// <summary>
+    /// The current buffer containing data read from the stream.
+    /// </summary>
     private ReadOnlySequence<byte> _buffer;
+    
+    /// <summary>
+    /// The current state of the JSON reader.
+    /// </summary>
     private JsonReaderState _jsonReaderState;
 
+    /// <summary>
+    /// Indicates whether the reader is currently buffering data for deserialization.
+    /// </summary>
     private bool _isBuffering;
+    
+    /// <summary>
+    /// The starting index of the buffer when buffering began.
+    /// </summary>
     private int _bufferingStartIndex;
 
+    /// <summary>
+    /// The pipe writer used to write buffered data during deserialization.
+    /// </summary>
     private PipeWriter? _writer;
 
+    /// <summary>
+    /// The raw bytes of the current JSON value.
+    /// </summary>
     internal byte[]? RawValueBytes;
 
     #endregion
@@ -55,7 +94,7 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     /// Constructs a new <see cref="Utf8JsonAsyncStreamReader"/> instance.
     /// </summary>
     /// <param name="stream">The stream that the <see cref="Utf8JsonAsyncStreamReader"/> will wrap.</param>
-    /// <param name="minimumBufferSize">The minimum buffer size to use when renting memory from the <paramref name="pool" />. The default value is 4096.</param>
+    /// <param name="minimumBufferSize">The minimum buffer size to use when renting memory from the pool. The default value is 8192 bytes.</param>
     /// <param name="leaveOpen"><see langword="true" /> to leave the underlying stream open after the <see cref="Utf8JsonAsyncStreamReader" /> completes; <see langword="false" /> to close it. The default is <see langword="false" />.</param>
     public Utf8JsonAsyncStreamReader(IO.Stream stream, int minimumBufferSize = -1, bool leaveOpen = false)
     {
@@ -164,12 +203,19 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
         return result;
     }
 
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
     void IDisposable.Dispose()
     {
         this.Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Releases the unmanaged resources used by the <see cref="Utf8JsonAsyncStreamReader"/> and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing"><see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/> to release only unmanaged resources.</param>
     public void Dispose(bool disposing)
     {
         if (!disposing)
@@ -180,6 +226,11 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
 
     #region Internal Methods
 
+    /// <summary>
+    /// Reads the next JSON token from the buffer.
+    /// </summary>
+    /// <param name="isFinalBlock">Indicates whether this is the final block of data to read.</param>
+    /// <returns><see langword="true"/> if a token was successfully read; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool JsonReader(bool isFinalBlock)
     {
@@ -212,6 +263,12 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
         return true;
     }
 
+    /// <summary>
+    /// Reads a complete JSON object or array asynchronously and writes it to the specified stream.
+    /// </summary>
+    /// <param name="stream">The stream to write the JSON object data to.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The value of the TResult parameter contains <see langword="true"/> if the operation was successful; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<bool> GetJsonObjectAsync(MemoryStream stream, CancellationToken cancellationToken)
     {
@@ -253,6 +310,9 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
         return true;
     }
 
+    /// <summary>
+    /// Writes the current buffer data to the buffering stream.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WriteToBufferStream()
     {

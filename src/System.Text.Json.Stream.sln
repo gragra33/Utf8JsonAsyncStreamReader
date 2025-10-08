@@ -9,6 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Text.Json.Stream.Tes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8828A2CE-A226-436F-BC9B-3900EFE6A845}"
 	ProjectSection(SolutionItems) = preProject
+		..\cleanbuild.ps1 = ..\cleanbuild.ps1
+		..\CODE_OF_CONDUCT.md = ..\CODE_OF_CONDUCT.md
+		..\CONTRIBUTING.md = ..\CONTRIBUTING.md
 		..\LICENSE = ..\LICENSE
 		..\readme.md = ..\readme.md
 	EndProjectSection

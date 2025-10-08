@@ -6,13 +6,30 @@ using JsonReader = System.Text.Json.Stream.Utf8JsonAsyncStreamReader;
 
 namespace UnitTests.Tests.Readers.System.Text.Json;
 
+/// <summary>
+/// Comprehensive tests for the <see cref="System.Text.Json.Stream.Utf8JsonAsyncStreamReader"/> class functionality.
+/// </summary>
 [Collection("Sequential")]
 public class Utf8JsonAsyncStreamReader
 {
+    /// <summary>
+    /// Test DateTime value used across multiple tests.
+    /// </summary>
     private static readonly DateTime testDateTime = new(2022, 09, 01, 11, 12, 13);
+    
+    /// <summary>
+    /// Test DateTimeOffset value used across multiple tests.
+    /// </summary>
     private static readonly DateTimeOffset testDateTimeOffset = testDateTime.ToDateTimeOffset(new TimeSpan(0, 30, 0));
+    
+    /// <summary>
+    /// Test Guid value used across multiple tests.
+    /// </summary>
     private static readonly Guid testGuid = Guid.NewGuid();
 
+    /// <summary>
+    /// JSON string containing various property types for testing.
+    /// </summary>
     private readonly string jsonProperties = JsonSerializer.Serialize
     (
         new
@@ -35,6 +52,9 @@ public class Utf8JsonAsyncStreamReader
         }
     );
 
+    /// <summary>
+    /// JSON string containing various property types using camelCase naming for testing.
+    /// </summary>
     private readonly string jsonPropertiesCamelCase = JsonSerializer.Serialize
     (
         new
@@ -57,6 +77,9 @@ public class Utf8JsonAsyncStreamReader
         }, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
     );
 
+    /// <summary>
+    /// JSON string containing an object with a collection property for testing.
+    /// </summary>
     private readonly string jsonCollection = JsonSerializer.Serialize
     (
         new
@@ -71,6 +94,9 @@ public class Utf8JsonAsyncStreamReader
         }
     );
 
+    /// <summary>
+    /// Tests reading JSON properties sequentially and verifying token types and values.
+    /// </summary>
     [Fact]
     async Task Json_Property()
     {
@@ -211,6 +237,9 @@ public class Utf8JsonAsyncStreamReader
         reader.TokenType.Should().Be(JsonTokenType.None);
     }
 
+    /// <summary>
+    /// Tests reading JSON collections (arrays) and verifying token types and values.
+    /// </summary>
     [Fact]
     async Task Json_Collection()
     {
@@ -259,6 +288,9 @@ public class Utf8JsonAsyncStreamReader
         reader.TokenType.Should().Be(JsonTokenType.None);
     }
 
+    /// <summary>
+    /// Tests deserializing JSON into a strongly-typed object with various property types.
+    /// </summary>
     [Fact]
     async Task Deserialize_Property()
     {
@@ -282,6 +314,9 @@ public class Utf8JsonAsyncStreamReader
         result.DateTimeValue.Should().Be(new DateTime(2022, 09, 01, 11, 12, 13));
     }
 
+    /// <summary>
+    /// Tests deserializing JSON with camelCase property naming into a strongly-typed object.
+    /// </summary>
     [Fact]
     async Task Deserialize_Property_CamelCase()
     {
@@ -308,6 +343,9 @@ public class Utf8JsonAsyncStreamReader
         result.DateTimeValue.Should().Be(new DateTime(2022, 09, 01, 11, 12, 13));
     }
 
+    /// <summary>
+    /// Tests deserializing JSON containing collections into a strongly-typed object.
+    /// </summary>
     [Fact]
     async Task Deserialize_Collection()
     {
