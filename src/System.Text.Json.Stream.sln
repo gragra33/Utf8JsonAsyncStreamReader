@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11104.47 d18.0
+VisualStudioVersion = 18.0.11104.47
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Text.Json.Stream", "System.Text.Json.Stream\System.Text.Json.Stream.csproj", "{97B87640-E80C-4511-A7E3-7C7BE64BCA9D}"
 EndProject
@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\cleanbuild.ps1 = ..\cleanbuild.ps1
 		..\CODE_OF_CONDUCT.md = ..\CODE_OF_CONDUCT.md
 		..\CONTRIBUTING.md = ..\CONTRIBUTING.md
+		..\HOW_IT_WORKS.md = ..\HOW_IT_WORKS.md
 		..\LICENSE = ..\LICENSE
 		..\readme.md = ..\readme.md
 	EndProjectSection

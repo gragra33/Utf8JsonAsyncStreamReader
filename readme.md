@@ -3,6 +3,30 @@
 [![NuGet Version](https://img.shields.io/nuget/v/Utf8JsonAsyncStreamReader.svg)](https://www.nuget.org/packages/Utf8JsonAsyncStreamReader)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Utf8JsonAsyncStreamReader.svg)](https://www.nuget.org/packages/Utf8JsonAsyncStreamReader)
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+  - [Requirements](#requirements)
+- [Usage](#usage)
+  - [Basic Stream Reading](#basic-stream-reading)
+  - [Object Deserialization](#object-deserialization)
+  - [Custom JsonSerializerOptions](#custom-jsonserializeroptions)
+  - [Processing Large Collections](#processing-large-collections)
+  - [Exception Handling](#exception-handling)
+- [How It Works](#how-it-works)
+- [Samples](#samples)
+- [v1.3.0 Performance Graphs](#v130-performance-graphs)
+  - [Speed Improvement by Scenario](#speed-improvement-by-scenario)
+  - [Gen2 GC Reduction](#gen2-gc-reduction)
+- [Real-World Impact](#real-world-impact)
+  - [High-Throughput API Example](#high-throughput-api-example)
+- [Support](#support)
+- [History](#history)
+
+---
+
 ## Overview
 
 An asynchronous forward-only streaming JSON parser and deserializer based on [System.Text.Json.Utf8JsonReader](https://github.com/dotnet/runtime/blob/418aa8ab6bb5cce2be1a8dee292818d2c201f152/src/libraries/System.Text.Json/src/System/Text/Json/Reader/Utf8JsonReader.cs). This library enables efficient processing of large JSON streams with minimal memory usage by buffering stream reads and supporting conditional branch deserialization. Memory consumption is optimized based on either the buffer size used or the specific JSON property branch being deserialized.
@@ -53,8 +77,9 @@ using System.Text.Json.Stream;
 using var fileStream = File.OpenRead("large-data.json");
 using var reader = new Utf8JsonAsyncStreamReader(fileStream);
 
-// Read JSON tokens asynchronously
-while (await reader.ReadAsync())
+// Read JSON tokens asynchronously with cancellation support
+using var cts = new CancellationTokenSource();
+while (await reader.ReadAsync(cts.Token))
 {
     switch (reader.TokenType)
     {
@@ -84,11 +109,12 @@ public class Person
     public string Email { get; set; }
 }
 
-// Deserialize directly from stream
+// Deserialize directly from stream with cancellation support
 using var stream = GetJsonStream(); // Your JSON stream source
 using var reader = new Utf8JsonAsyncStreamReader(stream);
+using var cts = new CancellationTokenSource();
 
-var person = await reader.DeserializeAsync<Person>();
+var person = await reader.DeserializeAsync<Person>(cancellationToken: cts.Token);
 Console.WriteLine($"Name: {person.Name}, Age: {person.Age}");
 ```
 
@@ -102,7 +128,8 @@ var options = new JsonSerializerOptions
 };
 
 using var reader = new Utf8JsonAsyncStreamReader(stream);
-var result = await reader.DeserializeAsync<MyObject>(options);
+using var cts = new CancellationTokenSource();
+var result = await reader.DeserializeAsync<MyObject>(options, cts.Token);
 ```
 
 ### Processing Large Collections
@@ -110,14 +137,64 @@ var result = await reader.DeserializeAsync<MyObject>(options);
 ```csharp
 // For large JSON arrays, process items one by one
 using var reader = new Utf8JsonAsyncStreamReader(stream);
+using var cts = new CancellationTokenSource();
 
-await reader.ReadAsync(); // StartArray
-while (await reader.ReadAsync() && reader.TokenType != JsonTokenType.EndArray)
+await reader.ReadAsync(cts.Token); // StartArray
+while (await reader.ReadAsync(cts.Token) && reader.TokenType != JsonTokenType.EndArray)
 {
-    var item = await reader.DeserializeAsync<MyItem>();
+    var item = await reader.DeserializeAsync<MyItem>(cancellationToken: cts.Token);
     ProcessItem(item); // Process each item individually
 }
 ```
+
+### Exception Handling
+
+The library provides specific exception types to help you handle different error scenarios:
+
+```csharp
+using System.Text.Json.Stream;
+
+try
+{
+    using var reader = new Utf8JsonAsyncStreamReader(stream);
+    using var cts = new CancellationTokenSource();
+    
+    while (await reader.ReadAsync(cts.Token))
+    {
+        // Process tokens...
+    }
+}
+catch (JsonStreamException ex)
+{
+    // Handle JSON stream-specific errors:
+    // - Invalid JSON structure
+    // - Incomplete tokens
+    // - Buffer undersized for current JSON structure
+    Console.WriteLine($"JSON Stream Error: {ex.Message}");
+}
+catch (JsonException ex)
+{
+    // Handle general JSON serialization errors
+    Console.WriteLine($"JSON Error: {ex.Message}");
+}
+catch (OperationCanceledException)
+{
+    // Handle cancellation
+    Console.WriteLine("Operation was cancelled");
+}
+```
+
+## How It Works
+
+For a detailed explanation of the internal architecture, performance optimizations, and streaming mechanisms, see our comprehensive [How It Works](HOW_IT_WORKS.md) documentation, with mermaid diagrams.
+
+This guide covers:
+
+- Core streaming architecture and `System.IO.Pipelines` integration
+- Memory management and buffer optimization strategies  
+- Asynchronous processing patterns and cancellation handling
+- Performance characteristics and benchmarking methodology
+- Real-world usage patterns and best practices
 
 ## Samples
 
@@ -140,18 +217,18 @@ Version 1.3.0 introduces significant performance optimizations that deliver meas
 
 ### Speed Improvement by Scenario
 ```
-Small JSON Token-by-Token:     +7.65% ********** *
-Medium JSON Token-by-Token:    +9.89% ********** **
-Large JSON Token-by-Token:    +19.61% ********** ***
+Small JSON Token-by-Token:     +7.65% ========·· ✨
+Medium JSON Token-by-Token:    +9.89% =========· ✨✨
+Large JSON Token-by-Token:    +19.61% ========== ✨✨✨
 ```
 
 ### Gen2 GC Reduction
 ```
-Before: ****************************************  (490 collections)
-After:  *******************                       (235 collections)
+Before: ========================================  (490 collections)
+After:  ===================·····················  (235 collections)
 ```
 
-That is a **52% REDUCTION!**
+That is a **52% REDUCTION!** ✨✨✨
 
 ## Real-World Impact
 
@@ -171,17 +248,22 @@ These performance improvements translate directly into cost savings and improved
 - Gen2 GC: **~2,350 collections** per 10K documents
 
 #### Savings
-- ** **Time**: 11.07 seconds saved per 10K documents (**+19.61% throughput!**)
-- ** **Memory**: 1.38 GB less per 10K documents (**+4.82% efficiency**)
-- *** **Gen2 GC**: 2,550 fewer collections per 10K documents (**-52% reduction!**)
-- ** **Cost**: Reduced infrastructure needs, fewer GC pauses
-- ** **Capacity**: Can handle **20% more concurrent requests** with same resources
+- **==· Time**: 11.07 seconds saved per 10K documents (**+19.61% throughput!**)
+- **==· Memory**: 1.38 GB less per 10K documents (**+4.82% efficiency**)
+- **=== Gen2 GC**: 2,550 fewer collections per 10K documents (**-52% reduction!**)
+- **==· Cost**: Reduced infrastructure needs, fewer GC pauses
+- **==· Capacity**: Can handle **20% more concurrent requests** with same resources
 
 ## Support
 
 If you find this library useful, please consider [buying me a coffee ☕](https://bmc.link/gragra33).
 
 ## History
+
+### v1.3.1 - October 2025
+
+- Added custom `JsonStreamException` for better error handling specificity
+- Added comprehensive [How It Works](HOW_IT_WORKS.md) documentation (uses mermaid diagrams)
 
 ### v1.3.0 - October 2025
 
