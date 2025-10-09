@@ -14,10 +14,10 @@
     <RepositoryUrl>https://github.com/gragra33/Utf8JsonAsyncStreamReader</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Json, stream, streaming</PackageTags>
-    <PackageReleaseNotes>v1.3.0 - Performance improvements: Up to 19.61% faster processing, 52% less Gen2 GC collections, 4-6% less memory usage; Added benchmarks; .NET 9.0 support; symbols support to NuGet; added benchmarks; updated readme</PackageReleaseNotes>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
-    <FileVersion>1.3.0.0</FileVersion>
-    <Version>1.3.0</Version>
+    <PackageReleaseNotes>v1.3.1 - Performance improvements: Up to 19.61% faster processing, 52% less Gen2 GC collections, 4-6% less memory usage; Added benchmarks; .NET 9.0 support; symbols support to NuGet; added benchmarks; added custom exception; added How It Works doc</PackageReleaseNotes>
+    <AssemblyVersion>1.3.1.0</AssemblyVersion>
+    <FileVersion>1.3.1.0</FileVersion>
+    <Version>1.3.1</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>

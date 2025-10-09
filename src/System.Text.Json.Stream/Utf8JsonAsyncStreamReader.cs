@@ -127,6 +127,9 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     /// <summary>Asynchronously reads a sequence of bytes.</summary>
     /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see langword="default" />.</param>
     /// <returns>A <see cref="T:System.Threading.Tasks.ValueTask`1" /> representing the asynchronous read operation state. <see langword="false" /> if finished, <see langword="true" /> if there is more to read.</returns>
+    /// <exception cref="JsonStreamException">
+    /// Thrown when the JSON is invalid, a token is incomplete, or the buffer is undersized for the current JSON structure.
+    /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public async ValueTask<bool> ReadAsync(CancellationToken cancellationToken = default)
     {
@@ -164,7 +167,7 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
 
             // check for any issues
             if (_buffer.Length - _bytesConsumed > 0 && !JsonReader(_endOfStream))
-                throw new Exception("Invalid Json or incomplete token or buffer undersized");
+                throw new JsonStreamException("Invalid Json or incomplete token or buffer undersized");
         }
 
         // we have reached the end of the stream
@@ -185,6 +188,9 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     /// The <see cref="System.Threading.CancellationToken"/> that can be used to cancel the read operation.
     /// </param>
     /// <exception cref="System.ArgumentNullException"></exception>
+    /// <exception cref="JsonStreamException">
+    /// Thrown when the JSON stream is invalid, a token is incomplete, or the buffer is undersized for the current JSON structure.
+    /// </exception>
     /// <exception cref="JsonException">
     /// The JSON is invalid,
     /// <typeparamref name="TValue"/> is not compatible with the JSON,
