@@ -61,7 +61,7 @@ dotnet add package Utf8JsonAsyncStreamReader
 
 ### Requirements
 
-- .NET 7.0, .NET 8.0, or .NET 9.0
+- .NET 8.0, .NET 9.0, or .NET 10.0
 - System.IO.Pipelines (automatically included)
 
 ## Usage
@@ -259,6 +259,11 @@ These performance improvements translate directly into cost savings and improved
 If you find this library useful, please consider [buying me a coffee ☕](https://bmc.link/gragra33).
 
 ## History
+
+### v2.0.0 - November 2025
+
+- Added support for .Net 10
+- Removed support for .Net 7
 
 ### v1.3.1 - October 2025
 

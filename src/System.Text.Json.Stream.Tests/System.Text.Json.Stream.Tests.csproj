@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFrameworks>net9.0;net8.0;net7.0</TargetFrameworks>
+	  <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -11,38 +11,23 @@
 
   <ItemGroup>
 	  <!-- Use framework-specific package versions for better compatibility -->
-	  <PackageReference Include="FluentAssertions" Version="6.12.0" Condition="'$(TargetFramework)' == 'net7.0'" />
-	  <PackageReference Include="FluentAssertions" Version="8.7.1" Condition="'$(TargetFramework)' != 'net7.0'" />
+	  <PackageReference Include="FluentAssertions" Version="8.7.1" />
 	  
-	  <PackageReference Include="FluentAssertions.Analyzers" Version="0.24.0" Condition="'$(TargetFramework)' == 'net7.0'">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-	  <PackageReference Include="FluentAssertions.Analyzers" Version="0.34.1" Condition="'$(TargetFramework)' != 'net7.0'">
+	  <PackageReference Include="FluentAssertions.Analyzers" Version="0.34.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
 	  
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="'$(TargetFramework)' != 'net7.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     
-    <PackageReference Include="xunit" Version="2.4.2" Condition="'$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="xunit" Version="2.9.3" Condition="'$(TargetFramework)' != 'net7.0'" />
+    <PackageReference Include="xunit" Version="2.9.3" />
     
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" Condition="'$(TargetFramework)' == 'net7.0'">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" Condition="'$(TargetFramework)' != 'net7.0'">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     
-    <PackageReference Include="coverlet.collector" Version="3.2.0" Condition="'$(TargetFramework)' == 'net7.0'">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="6.0.4" Condition="'$(TargetFramework)' != 'net7.0'">
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
