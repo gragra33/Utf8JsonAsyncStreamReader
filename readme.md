@@ -15,7 +15,7 @@
   - [Custom JsonSerializerOptions](#custom-jsonserializeroptions)
   - [Processing Large Collections](#processing-large-collections)
   - [Exception Handling](#exception-handling)
-- [Value Methods](#utf8jsonhelpers-extension-methods)
+- [Value Methods](#value-methods)
 - [How It Works](#how-it-works)
 - [Samples](#samples)
 - [v1.3.0 Performance Graphs](#v130-performance-graphs)
