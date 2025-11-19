@@ -15,6 +15,7 @@
   - [Custom JsonSerializerOptions](#custom-jsonserializeroptions)
   - [Processing Large Collections](#processing-large-collections)
   - [Exception Handling](#exception-handling)
+- [Value Methods](#utf8jsonhelpers-extension-methods)
 - [How It Works](#how-it-works)
 - [Samples](#samples)
 - [v1.3.0 Performance Graphs](#v130-performance-graphs)
@@ -184,6 +185,93 @@ catch (OperationCanceledException)
 }
 ```
 
+## Value Methods
+
+The `Utf8JsonHelpers` class provides comprehensive extension methods to extract strongly-typed values from JSON tokens. These methods follow the standard .NET patterns and offer both safe (Try*) and direct (Get*) access patterns.
+
+### String & Copy Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetString()` | `string?` | Gets the string value, returns null for JSON null tokens |
+| `CopyString(Span<byte>)` | `int` | Copies UTF-8 bytes to destination span, throws if buffer too small |
+| `CopyString(Span<char>)` | `int` | Copies transcoded UTF-16 chars to destination span, throws if buffer too small |
+
+### Boolean Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetBoolean()` | `bool?` | Gets the boolean value (true/false), returns null for non-boolean tokens |
+
+### Numeric Methods - Byte Types
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetByte()` | `byte` | Gets byte value (0-255), returns 0 on failure |
+| `TryGetByte(out byte?)` | `bool` | Attempts to get byte value, returns success status |
+| `GetSByte()` | `sbyte` | Gets signed byte value (-128 to 127), returns 0 on failure |
+| `TryGetSByte(out sbyte?)` | `bool` | Attempts to get signed byte value, returns success status |
+| `GetUByte()` | `uint` | Gets unsigned byte value, returns 0 on failure |
+| `TryGetUByte(out uint?)` | `bool` | Attempts to get unsigned byte value, returns success status |
+
+### Numeric Methods - Integer Types
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetInt16()` | `short` | Gets 16-bit signed integer (-32,768 to 32,767), returns 0 on failure |
+| `TryGetInt16(out short?)` | `bool` | Attempts to get 16-bit signed integer, returns success status |
+| `GetUInt16()` | `uint` | Gets 16-bit unsigned integer (0 to 65,535), returns 0 on failure |
+| `TryGetUInt16(out uint?)` | `bool` | Attempts to get 16-bit unsigned integer, returns success status |
+| `GetInt32()` | `int` | Gets 32-bit signed integer, returns 0 on failure |
+| `TryGetInt32(out int?)` | `bool` | Attempts to get 32-bit signed integer, returns success status |
+| `GetUInt32()` | `uint` | Gets 32-bit unsigned integer, returns 0 on failure |
+| `TryGetUInt32(out uint?)` | `bool` | Attempts to get 32-bit unsigned integer, returns success status |
+| `GetInt64()` | `long` | Gets 64-bit signed integer, returns 0 on failure |
+| `TryGetInt64(out long?)` | `bool` | Attempts to get 64-bit signed integer, returns success status |
+| `GetUInt64()` | `ulong` | Gets 64-bit unsigned integer, returns 0 on failure |
+| `TryGetUInt64(out ulong?)` | `bool` | Attempts to get 64-bit unsigned integer, returns success status |
+
+### Numeric Methods - Floating Point Types
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetSingle()` | `float` | Gets single-precision floating-point number, returns 0 on failure |
+| `TryGetSingle(out float?)` | `bool` | Attempts to get single-precision floating-point number, returns success status |
+| `GetDouble()` | `double` | Gets double-precision floating-point number, returns 0 on failure |
+| `TryGetDouble(out double?)` | `bool` | Attempts to get double-precision floating-point number, returns success status |
+| `GetDecimal()` | `decimal` | Gets decimal value, returns 0 on failure |
+| `TryGetDecimal(out decimal?)` | `bool` | Attempts to get decimal value, returns success status |
+
+### Date/Time Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetDateTime()` | `DateTime` | Gets DateTime value, returns default on failure |
+| `TryGetDateTime(out DateTime?)` | `bool` | Attempts to get DateTime value, returns success status |
+| `GetDateTimeOffset()` | `DateTimeOffset` | Gets DateTimeOffset value, returns default on failure |
+| `TryGetDateTimeOffset(out DateTimeOffset?)` | `bool` | Attempts to get DateTimeOffset value, returns success status |
+
+### GUID Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetGuid()` | `Guid` | Gets Guid value, returns Empty on failure |
+| `TryGetGuid(out Guid?)` | `bool` | Attempts to get Guid value, returns success status |
+
+### Base64 Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetBytesFromBase64()` | `byte[]?` | Decodes Base64 string to bytes, throws FormatException on failure |
+| `TryGetBytesFromBase64(out byte[]?)` | `bool` | Attempts to decode Base64 string, returns success status |
+
+### Value Extraction Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetValue()` | `object?` | Gets typed value based on TokenType (string, number, bool, null) |
+| `GetNumber()` | `object?` | Parses number token to best-fit numeric type (Int16, Int32, Int64, Double) |
+
 ## How It Works
 
 For a detailed explanation of the internal architecture, performance optimizations, and streaming mechanisms, see our comprehensive [How It Works](HOW_IT_WORKS.md) documentation, with mermaid diagrams.
@@ -260,7 +348,13 @@ If you find this library useful, please consider [buying me a coffee ☕](https:
 
 ## History
 
-### v2.0.0 - November 2025
+### v2.1.0 - 19 November 2025
+
+- Added new Value methods: CopyString (performant UTF8 & UTF16), GetSByte, TryGetSByte, GetBytesFromBase64, TryGetBytesFromBase64
+- Updated readme with tables of all Value converter methods
+- Added test coverage for new Value methods
+
+### v2.0.0 - 17 November 2025
 
 - Added support for .Net 10
 - Removed support for .Net 7

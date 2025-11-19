@@ -14,10 +14,10 @@
     <RepositoryUrl>https://github.com/gragra33/Utf8JsonAsyncStreamReader</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Json, stream, streaming</PackageTags>
-    <PackageReleaseNotes>v2.0.0 - Added .NET 10.0 support; Dropped .NET 7.0 support (EOL); Multi-targeting for .NET 8.0, 9.0, and 10.0</PackageReleaseNotes>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.0.0</Version>
+    <PackageReleaseNotes>v2.1.0 - Added .NET 10.0 support; Dropped .NET 7.0 support (EOL); Multi-targeting for .NET 8.0, 9.0, and 10.0</PackageReleaseNotes>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
+    <Version>2.1.0</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
