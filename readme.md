@@ -2,6 +2,7 @@
 
 [![NuGet Version](https://img.shields.io/nuget/v/Utf8JsonAsyncStreamReader.svg)](https://www.nuget.org/packages/Utf8JsonAsyncStreamReader)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Utf8JsonAsyncStreamReader.svg)](https://www.nuget.org/packages/Utf8JsonAsyncStreamReader)
+[![.NET 8+](https://img.shields.io/badge/.NET-8%2B-512BD4)](https://dotnet.microsoft.com/download)
 
 ## Table of Contents
 
