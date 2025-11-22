@@ -10,6 +10,7 @@
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Requirements](#requirements)
+- [Give a ⭐](#give-a-)
 - [Usage](#usage)
   - [Basic Stream Reading](#basic-stream-reading)
   - [Object Deserialization](#object-deserialization)
@@ -65,6 +66,12 @@ dotnet add package Utf8JsonAsyncStreamReader
 
 - .NET 8.0, .NET 9.0, or .NET 10.0
 - System.IO.Pipelines (automatically included)
+
+## Give a ⭐
+
+If you like or are using this project to learn or start your solution, please give it a star. Thanks!
+
+Also, if you find this library useful, and you're feeling really generous, then please consider [buying me a coffee ☕](https://bmc.link/gragra33).
 
 ## Usage
 
