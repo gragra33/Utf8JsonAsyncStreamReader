@@ -4,6 +4,8 @@
     <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Utf8JsonAsyncStreamReader</PackageId>
     <Title>An Asynchronous forward-only streaming JSON parser and deserializer based on System.Text.Json.Utf8JsonReader.</Title>
@@ -13,11 +15,11 @@
     <PackageReadmeFile>readme.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/gragra33/Utf8JsonAsyncStreamReader</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>Json, stream, streaming</PackageTags>
-    <PackageReleaseNotes>v2.1.0 - Added .NET 10.0 support; Dropped .NET 7.0 support (EOL); Multi-targeting for .NET 8.0, 9.0, and 10.0</PackageReleaseNotes>
-    <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <FileVersion>2.1.0.0</FileVersion>
-    <Version>2.1.0</Version>
+    <PackageTags>Json, stream, streaming, AOT</PackageTags>
+    <PackageReleaseNotes>v2.2.0 - Added full AOT compatibility with RequiresUnreferencedCode/RequiresDynamicCode attributes; Added comprehensive AOT usage documentation; Multi-targeting for .NET 8.0, 9.0, and 10.0</PackageReleaseNotes>
+    <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <FileVersion>2.2.0.0</FileVersion>
+    <Version>2.2.0</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>

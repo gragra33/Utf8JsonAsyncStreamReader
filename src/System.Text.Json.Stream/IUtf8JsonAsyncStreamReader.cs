@@ -1,4 +1,6 @@
-﻿namespace System.Text.Json.Stream;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace System.Text.Json.Stream;
 
 /// <summary>
 /// A high-performance API for forward-only, read-only stream access to the UTF-8 encoded JSON text with conditional deserialization of json objects.
@@ -38,7 +40,7 @@ public interface IUtf8JsonAsyncStreamReader : IDisposable
         /// Reads the UTF-8 encoded text representing a single JSON value into a <typeparamref name="TResult"/>.
         /// The Stream will be read to end of current branch.
         /// </summary>
-        /// <typeparam name="TResult">The type to deserialize the JSON value into.</typeparamref>
+        /// <typeparam name="TResult">The type to deserialize the JSON value into.</typeparam>
         /// <returns>A <typeparamref name="TResult"/> representation of the JSON value.</returns>
         /// <param name="options">Options to control the behavior during reading.</param>
         /// <param name="cancellationToken">
@@ -50,13 +52,34 @@ public interface IUtf8JsonAsyncStreamReader : IDisposable
         /// </exception>
         /// <exception cref="JsonException">
         /// The JSON is invalid,
-    /// <typeparamref name="TResult"/> is not compatible with the JSON,
+        /// <typeparamref name="TResult"/> is not compatible with the JSON,
         /// or when there is remaining data in the Stream.
         /// </exception>
         /// <exception cref="NotSupportedException">
         /// There is no compatible <see cref="System.Text.Json.Serialization.JsonConverter"/>
-    /// for <typeparamref name="TResult"/> or its serializable members.
+        /// for <typeparamref name="TResult"/> or its serializable members.
         /// </exception>
+        /// <remarks>
+        /// <para>
+        /// For AOT (Ahead-of-Time) compilation scenarios, you must use source-generated JsonSerializerContext.
+        /// See https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/source-generation
+        /// </para>
+        /// <para>
+        /// Example AOT usage:
+        /// <code>
+        /// [JsonSerializable(typeof(MyObject))]
+        /// partial class MyJsonContext : JsonSerializerContext { }
+        /// 
+        /// var options = new JsonSerializerOptions
+        /// {
+        ///     TypeInfoResolver = MyJsonContext.Default
+        /// };
+        /// var result = await reader.DeserializeAsync&lt;MyObject&gt;(options);
+        /// </code>
+        /// </para>
+        /// </remarks>
+        [RequiresUnreferencedCode("JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonSerializerContext, or make sure all required types are preserved.")]
+        [RequiresDynamicCode("JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonSerializerContext.")]
     ValueTask<TResult?> DeserializeAsync<TResult>(JsonSerializerOptions? options = null, CancellationToken cancellationToken = default);
 
     #endregion

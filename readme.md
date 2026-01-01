@@ -10,6 +10,7 @@
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Requirements](#requirements)
+- [AOT Compatibility](#aot-compatibility)
 - [Give a ⭐](#give-a-)
 - [Usage](#usage)
   - [Basic Stream Reading](#basic-stream-reading)
@@ -66,6 +67,50 @@ dotnet add package Utf8JsonAsyncStreamReader
 
 - .NET 8.0, .NET 9.0, or .NET 10.0
 - System.IO.Pipelines (automatically included)
+
+## AOT Compatibility
+
+✅ **This library is AOT (Ahead-of-Time) compatible!**
+
+The library can be used in Native AOT published applications. When using the `DeserializeAsync` method, you must use source-generated `JsonSerializerContext` for full AOT compatibility.
+
+### Quick AOT Example
+
+```csharp
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Stream;
+
+// 1. Define your JSON context
+[JsonSerializable(typeof(Person))]
+[JsonSerializable(typeof(List<Person>))]
+internal partial class MyJsonContext : JsonSerializerContext { }
+
+// 2. Configure options with your context
+var options = new JsonSerializerOptions
+{
+    TypeInfoResolver = MyJsonContext.Default
+};
+
+// 3. Use with the reader
+using var stream = File.OpenRead("data.json");
+using var reader = new Utf8JsonAsyncStreamReader(stream);
+var person = await reader.DeserializeAsync<Person>(options);
+```
+
+**Token-by-token reading is always AOT-safe** and requires no special configuration:
+
+```csharp
+using var reader = new Utf8JsonAsyncStreamReader(stream);
+while (await reader.ReadAsync())
+{
+    var value = reader.Value;  // AOT-safe
+    var str = reader.GetString();  // AOT-safe
+    var num = reader.GetInt32();  // AOT-safe
+}
+```
+
+📖 **For complete AOT usage guide**, see [AOT_GUIDE.md](AOT_GUIDE.md)
 
 ## Give a ⭐
 
@@ -355,6 +400,16 @@ These performance improvements translate directly into cost savings and improved
 If you find this library useful, please consider [buying me a coffee ☕](https://bmc.link/gragra33).
 
 ## History
+
+### v2.2.0 - January 2025
+
+- ✅ **Full AOT (Ahead-of-Time) Compilation Support**
+  - Added `IsAotCompatible` and `PublishAot` project properties
+  - Added `RequiresUnreferencedCode` and `RequiresDynamicCode` attributes to `DeserializeAsync` method
+  - Comprehensive XML documentation for AOT usage patterns
+  - Created complete [AOT_GUIDE.md](AOT_GUIDE.md) with examples and best practices
+- Updated README with AOT compatibility section
+- Token-by-token reading remains fully AOT-safe without additional configuration
 
 ### v2.1.0 - 19 November 2025
 

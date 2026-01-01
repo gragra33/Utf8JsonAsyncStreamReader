@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using Microsoft.IO;
@@ -200,6 +201,27 @@ public sealed class Utf8JsonAsyncStreamReader : IUtf8JsonAsyncStreamReader
     /// There is no compatible <see cref="System.Text.Json.Serialization.JsonConverter"/>
     /// for <typeparamref name="TValue"/> or its serializable members.
     /// </exception>
+    /// <remarks>
+    /// <para>
+    /// For AOT (Ahead-of-Time) compilation scenarios, you must use source-generated JsonSerializerContext.
+    /// Pass a <see cref="JsonSerializerOptions"/> instance with a TypeInfoResolver configured for your types.
+    /// </para>
+    /// <para>
+    /// Example AOT usage:
+    /// <code>
+    /// [JsonSerializable(typeof(MyObject))]
+    /// partial class MyJsonContext : JsonSerializerContext { }
+    /// 
+    /// var options = new JsonSerializerOptions
+    /// {
+    ///     TypeInfoResolver = MyJsonContext.Default
+    /// };
+    /// var result = await reader.DeserializeAsync&lt;MyObject&gt;(options);
+    /// </code>
+    /// </para>
+    /// </remarks>
+    [RequiresUnreferencedCode("JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonSerializerContext, or make sure all required types are preserved.")]
+    [RequiresDynamicCode("JSON serialization and deserialization might require types that cannot be statically analyzed. Use the overload that takes a JsonSerializerContext.")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public async ValueTask<TValue?> DeserializeAsync<TValue>(JsonSerializerOptions? options = null, CancellationToken cancellationToken = default)
     {
