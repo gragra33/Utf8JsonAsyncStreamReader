@@ -1,0 +1,88 @@
+name: Release
+
+"on":
+    push:
+        branches:
+            - master
+
+jobs:
+    release:
+        name: Build, Test & Publish to NuGet
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  fetch-depth: 0
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v5
+              with:
+                  dotnet-version: |
+                      8.0.x
+                      9.0.x
+                      10.0.x
+            - name: Restore
+              run: dotnet restore src/System.Text.Json.Stream.CI.slnf
+            - name: Build
+              run: dotnet build src/System.Text.Json.Stream.CI.slnf --no-restore --configuration Release -p:GeneratePackageOnBuild=false
+            - name: Test (net8.0)
+              run: |
+                  dotnet test src/System.Text.Json.Stream.Tests/System.Text.Json.Stream.Tests.csproj \
+                    --configuration Release --framework net8.0
+            - name: Test (net9.0)
+              run: |
+                  dotnet test src/System.Text.Json.Stream.Tests/System.Text.Json.Stream.Tests.csproj \
+                    --configuration Release --framework net9.0
+            - name: Test (net10.0)
+              run: |
+                  dotnet test src/System.Text.Json.Stream.Tests/System.Text.Json.Stream.Tests.csproj \
+                    --configuration Release --framework net10.0
+            - name: Extract version from csproj
+              id: version
+              run: |
+                  VERSION=$(grep -m1 '<Version>' src/System.Text.Json.Stream/System.Text.Json.Stream.csproj \
+                    | sed 's/.*<Version>//;s/<\/Version>.*//' \
+                    | tr -d '[:space:]')
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+                  echo "Resolved version: $VERSION"
+            - name: Check if this version was already released
+              id: tag_check
+              run: |
+                  if git ls-remote --tags origin "refs/tags/v${{ steps.version.outputs.version }}" | grep -q .; then
+                    echo "exists=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "exists=false" >> $GITHUB_OUTPUT
+                  fi
+            - name: Pack NuGet package
+              if: steps.tag_check.outputs.exists == 'false'
+              run: |
+                  dotnet pack src/System.Text.Json.Stream/System.Text.Json.Stream.csproj \
+                    --no-build --configuration Release --output ./artifacts
+            - name: Create GitHub Release
+              if: steps.tag_check.outputs.exists == 'false'
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  gh release create "${{ steps.version.outputs.tag }}" \
+                    --title "Release ${{ steps.version.outputs.tag }}" \
+                    --generate-notes \
+                    ./artifacts/Utf8JsonAsyncStreamReader.${{ steps.version.outputs.version }}.nupkg \
+                    ./artifacts/Utf8JsonAsyncStreamReader.${{ steps.version.outputs.version }}.snupkg
+            - name: Push Utf8JsonAsyncStreamReader to NuGet.org
+              if: steps.tag_check.outputs.exists == 'false'
+              run: |
+                  dotnet nuget push \
+                    "./artifacts/Utf8JsonAsyncStreamReader.${{ steps.version.outputs.version }}.nupkg" \
+                    --api-key ${{ secrets.NUGET_API_KEY }} \
+                    --source https://api.nuget.org/v3/index.json \
+                    --skip-duplicate
+            - name: Push Utf8JsonAsyncStreamReader symbols to NuGet.org
+              if: steps.tag_check.outputs.exists == 'false'
+              run: |
+                  dotnet nuget push \
+                    "./artifacts/Utf8JsonAsyncStreamReader.${{ steps.version.outputs.version }}.snupkg" \
+                    --api-key ${{ secrets.NUGET_API_KEY }} \
+                    --source https://api.nuget.org/v3/index.json \
+                    --skip-duplicate
