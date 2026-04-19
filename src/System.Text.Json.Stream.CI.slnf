@@ -1,0 +1,9 @@
+{
+    "solution": {
+        "path": "System.Text.Json.Stream.sln",
+        "projects": [
+            "System.Text.Json.Stream\\System.Text.Json.Stream.csproj",
+            "System.Text.Json.Stream.Tests\\System.Text.Json.Stream.Tests.csproj"
+        ]
+    }
+}

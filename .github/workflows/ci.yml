@@ -1,0 +1,70 @@
+name: CI
+
+"on":
+    push:
+        branches:
+            - develop
+            - "feature/**"
+            - "fix/**"
+            - "hotfix/**"
+    pull_request:
+        branches:
+            - develop
+            - master
+
+jobs:
+    validate-branch:
+        name: Validate Branch Name
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+        steps:
+            - name: Check branch naming convention
+              env:
+                  BRANCH: ${{ github.head_ref }}
+              run: |
+                  if [[ ! "$BRANCH" =~ ^(feature|fix|hotfix)/.+ ]] && [[ "$BRANCH" != "develop" ]]; then
+                    echo "::error::Branch '$BRANCH' does not follow naming conventions."
+                    echo "::error::PR source branches must be 'develop' or prefixed with 'feature/', 'fix/', or 'hotfix/'."
+                    exit 1
+                  fi
+                  echo "Branch '$BRANCH' follows naming conventions."
+
+    build-and-test:
+        name: Build & Test (${{ matrix.framework }})
+        needs: validate-branch
+        # Run on push events (validate-branch skipped) OR on valid PRs (validate-branch succeeded)
+        if: always() && (needs.validate-branch.result == 'success' || needs.validate-branch.result == 'skipped')
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                framework: ["net8.0", "net9.0", "net10.0"]
+        steps:
+            - uses: actions/checkout@v5
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v5
+              with:
+                  dotnet-version: |
+                      8.0.x
+                      9.0.x
+                      10.0.x
+            - name: Restore
+              run: dotnet restore src/System.Text.Json.Stream.CI.slnf
+            - name: Build
+              run: dotnet build src/System.Text.Json.Stream.CI.slnf --no-restore --configuration Release -p:GeneratePackageOnBuild=false
+            - name: Test (${{ matrix.framework }})
+              run: |
+                  dotnet test src/System.Text.Json.Stream.Tests/System.Text.Json.Stream.Tests.csproj \
+                    --no-build --no-restore \
+                    --configuration Release --framework ${{ matrix.framework }} \
+                    --logger "trx;LogFileName=test-results-${{ matrix.framework }}.trx"
+            - name: Upload test results
+              uses: actions/upload-artifact@v7
+              if: always()
+              # continue-on-error is intentionally true: when running locally via act, ACTIONS_RUNTIME_TOKEN
+              # is not available and upload-artifact always fails. Using env.ACT == 'true' trips actionlint
+              # (ACT is not a standard GitHub context variable), so we keep the unconditional true here.
+              continue-on-error: true
+              with:
+                  name: test-results-${{ matrix.framework }}
+                  path: "**/*.trx"
