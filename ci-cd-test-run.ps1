@@ -176,7 +176,7 @@ if ($Mode -in @('dry', 'all') -and $dockerAvailable -and $hasAct) {
         Write-Section "Dry-run $($wf.Name) workflow"
         Push-Location $RepoRoot
         try {
-            $actArgs = @('push', '--workflows', $wf.File, '-n')
+            $actArgs = @('push', '--workflows', $wf.File, '--env', 'RUNNING_LOCALLY=true', '-n')
             $eventPath = $null
 
             # Release workflow is gated on push to master; provide an explicit push event payload.
@@ -197,12 +197,16 @@ if ($Mode -in @('dry', 'all') -and $dockerAvailable -and $hasAct) {
                 $_ -match '(FAIL|error)' -and
                 $_ -notmatch 'DRYRUN' -and
                 $_ -notmatch 'upload-artifact' -and
-                $_ -notmatch '\.cache\\act\\actions-upload-artifact' -and
-                $_ -notmatch 'The system cannot find the file specified'
+                $_ -notmatch '\.cache\\act\\actions-upload-artifact'
+                # Note: 'The system cannot find the file specified' was removed — it is too
+                # broad and can hide unrelated failures. The specific cache path pattern above
+                # is the reliable signal for the known act Windows cache-cleanup bug.
             })
             $knownArtifactCacheIssue = @($out | Where-Object {
-                $_ -match 'actions-upload-artifact' -or
-                $_ -match 'The system cannot find the file specified'
+                # Match only the specific known act Windows cache-cleanup issue.
+                # Matching on 'The system cannot find the file specified' alone was removed —
+                # that message can appear from unrelated failures unconnected to artifact cleanup.
+                $_ -match '\.cache\\act\\actions-upload-artifact'
             })
 
             $dryRunLines = @($out | Where-Object { $_ -match '\*DRYRUN\* \[[^\]]+\]' })
@@ -239,9 +243,23 @@ if ($Mode -in @('ci', 'all') -and $dockerAvailable -and $hasAct) {
     foreach ($wf in $actWorkflows) {
         Write-Section "Running $($wf.Name) workflow via act"
         Push-Location $RepoRoot
+        $eventPath = $null
         try {
-            $actArgs = @($wf.Event, '--workflows', $wf.File)
+            $actArgs = @($wf.Event, '--workflows', $wf.File, '--env', 'RUNNING_LOCALLY=true')
             if ($Job) { $actArgs += @('-j', $Job) }
+
+            # Release workflow is gated on push to master; supply an explicit push event
+            # payload so act targets the correct branch and does not skip the workflow.
+            # Mirrors the same payload used in the dry-run path above.
+            if ($wf.Name -eq 'Release') {
+                $eventPath = [System.IO.Path]::GetTempFileName()
+                @{
+                    ref = 'refs/heads/master'
+                    repository = @{ default_branch = 'master' }
+                    head_commit = @{ id = 'local-ci-run' }
+                } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $eventPath -Encoding UTF8
+                $actArgs += @('-e', $eventPath)
+            }
 
             # Stream output, capture for analysis
             $outLines = [System.Collections.Generic.List[string]]::new()
@@ -274,6 +292,9 @@ if ($Mode -in @('ci', 'all') -and $dockerAvailable -and $hasAct) {
                 Add-Error "$($wf.Name) workflow had job failures (see above)"
             }
         } finally {
+            if ($null -ne $eventPath -and (Test-Path -LiteralPath $eventPath)) {
+                Remove-Item -LiteralPath $eventPath -Force -ErrorAction SilentlyContinue
+            }
             Pop-Location
         }
     }

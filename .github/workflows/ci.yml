@@ -12,6 +12,11 @@ name: CI
             - develop
             - master
 
+# RUNNING_LOCALLY is set to 'true' by ci-cd-test-run.ps1 via act's --env flag.
+# On real GitHub Actions the variable is empty, so steps gated on it run normally.
+env:
+    RUNNING_LOCALLY: ""
+
 jobs:
     validate-branch:
         name: Validate Branch Name
@@ -60,11 +65,9 @@ jobs:
                     --logger "trx;LogFileName=test-results-${{ matrix.framework }}.trx"
             - name: Upload test results
               uses: actions/upload-artifact@v7
-              if: always()
-              # continue-on-error is intentionally true: when running locally via act, ACTIONS_RUNTIME_TOKEN
-              # is not available and upload-artifact always fails. Using env.ACT == 'true' trips actionlint
-              # (ACT is not a standard GitHub context variable), so we keep the unconditional true here.
-              continue-on-error: true
+              # Skipped when running locally via act (RUNNING_LOCALLY=true passed by ci-cd-test-run.ps1).
+              # On real GitHub Actions RUNNING_LOCALLY is empty, so the step runs and failures are fatal.
+              if: always() && env.RUNNING_LOCALLY == ''
               with:
                   name: test-results-${{ matrix.framework }}
                   path: "**/*.trx"
