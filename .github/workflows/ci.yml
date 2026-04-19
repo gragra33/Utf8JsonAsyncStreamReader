@@ -55,11 +55,15 @@ jobs:
             - name: Test (${{ matrix.framework }})
               run: |
                   dotnet test src/System.Text.Json.Stream.Tests/System.Text.Json.Stream.Tests.csproj \
+                    --no-build --no-restore \
                     --configuration Release --framework ${{ matrix.framework }} \
                     --logger "trx;LogFileName=test-results-${{ matrix.framework }}.trx"
             - name: Upload test results
               uses: actions/upload-artifact@v7
               if: always()
+              # continue-on-error is intentionally true: when running locally via act, ACTIONS_RUNTIME_TOKEN
+              # is not available and upload-artifact always fails. Using env.ACT == 'true' trips actionlint
+              # (ACT is not a standard GitHub context variable), so we keep the unconditional true here.
               continue-on-error: true
               with:
                   name: test-results-${{ matrix.framework }}

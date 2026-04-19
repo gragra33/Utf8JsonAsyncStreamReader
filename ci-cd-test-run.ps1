@@ -79,10 +79,10 @@ $needsActionlint = $Mode -in @('lint', 'all')
 $needsAct        = $Mode -in @('dry', 'ci', 'all')
 
 if ($needsAct) {
-    if (-not (Test-Tool 'dotnet')) {
-        Add-Error "Tool 'dotnet' not found. Install: https://dotnet.microsoft.com/download"
-    } else {
+    if (Test-Tool 'dotnet') {
         Write-Pass "dotnet $(dotnet --version)"
+    } else {
+        Write-Warn "Tool 'dotnet' not found on host. Continuing because act-backed workflows install .NET inside the runner via actions/setup-dotnet."
     }
 }
 
@@ -112,12 +112,20 @@ if ($needsAct) {
         Add-Error "Tool 'act' not found. Install: $installHint"
     }
 
-    try {
-        $null = docker info 2>$null
-        $dockerAvailable = $true
-        Write-Pass 'Docker daemon reachable'
-    } catch {
-        Add-Error 'Docker not reachable — act dry/ci modes require Docker'
+    $hasDocker = Test-Tool 'docker'
+    if (-not $hasDocker) {
+        $installHint = if ($IsWindows) { 'Install Docker Desktop: https://docs.docker.com/desktop/setup/install/windows-install/' }
+                       elseif ($IsMacOS) { 'brew install --cask docker  (or install Docker Desktop: https://docs.docker.com/desktop/setup/install/mac-install/)' }
+                       else { 'Install Docker Engine: https://docs.docker.com/engine/install/' }
+        Add-Error "Tool 'docker' not found. Install: $installHint"
+    } else {
+        try {
+            $null = docker info 2>$null
+            $dockerAvailable = $true
+            Write-Pass 'Docker daemon reachable'
+        } catch {
+            Add-Error 'Docker not reachable — act dry/ci modes require Docker daemon running'
+        }
     }
 }
 

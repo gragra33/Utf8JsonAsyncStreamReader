@@ -29,15 +29,15 @@ jobs:
             - name: Test (net8.0)
               run: |
                   dotnet test src/System.Text.Json.Stream.Tests/System.Text.Json.Stream.Tests.csproj \
-                    --configuration Release --framework net8.0
+                    --no-build --no-restore --configuration Release --framework net8.0
             - name: Test (net9.0)
               run: |
                   dotnet test src/System.Text.Json.Stream.Tests/System.Text.Json.Stream.Tests.csproj \
-                    --configuration Release --framework net9.0
+                    --no-build --no-restore --configuration Release --framework net9.0
             - name: Test (net10.0)
               run: |
                   dotnet test src/System.Text.Json.Stream.Tests/System.Text.Json.Stream.Tests.csproj \
-                    --configuration Release --framework net10.0
+                    --no-build --no-restore --configuration Release --framework net10.0
             - name: Extract version from csproj
               id: version
               run: |
